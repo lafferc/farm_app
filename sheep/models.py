@@ -1,36 +1,37 @@
 from django.db import models
 
-class Dose(models.model):
-	name = models.charfield()
-	days = models.charfield()
+class Dose(models.Model):
+	name = models.CharField()
+	days = models.CharField()
 
 
-class Sheep(models.model):
-	tag = models.charfield()
-	name = models.charfield(null=True, blank=True)
-	gender = models.charfield(choices=(('R', 'Ram'),('E', 'Ewe')))
-	yob = models.datefeild(null=True, blank=True)
-	age = models.charfeild(chices=(('S','sheep'), ('H', 'hogget'), ('L','lamb')))
-	is_alive = models.booleanfield(default=True)
-	parent = models.foreginkey(Sheep, null=True, blank=True)
-	dossed = models.manytomanyfeild(Dose, through='dose_diven')
+class Sheep(models.Model):
+	tag = models.CharField()
+	name = models.CharField(null=True, blank=True)
+	gender = models.CharField(choices=(('R', 'Ram'),('E', 'Ewe')))
+	yob = models.DateField(null=True, blank=True)
+	age = models.CharField(choices=(('S','sheep'), ('H', 'hogget'), ('L','lamb')))
+	is_alive = models.BooleanField(default=True)
+	parent = models.ForeignKey("Sheep", null=True, blank=True)
+	dossed = models.ManyToManyField(Dose, through='dose_diven')
+    comment = models.CharField(null=True, blank=True)
 	
 
-class dose_given(models.model):
-	sheep = models.foreginkey(Sheep)
-	dose = models.foreginkey(Dose)
-	date = models.datefeild()
+class dose_given(models.Model):
+	sheep = models.ForeignKey(Sheep)
+	dose = models.ForeignKey(Dose)
+	date = models.DateField()
 
 
-class weight(models.model):
-	sheep = models.foreginkey(Sheep)
-	date = models.datefeild()
-	value = models.intagerfield()
+class weight(models.Model):
+	sheep = models.ForeignKey(Sheep)
+	date = models.DateField()
+	value = models.IntegerField()
 
 
-class Lambing_year(models.model):
-	sheep = models.foreginkey(Sheep)
-	year = models.datefield()
-	scanned = models.intagerfield()
-	born = models.intagerfield()
-	yenned = models.intagerfield()
+class Lambing_year(models.Model):
+	sheep = models.ForeignKey(Sheep)
+	year = models.DateField()
+	scanned = models.IntegerField()
+	born = models.IntegerField()
+	yenned = models.IntegerField()
