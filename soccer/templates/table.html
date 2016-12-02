@@ -1,0 +1,22 @@
+{% extends "soccer_base.html" %}
+
+{% block content %}
+{% if leaderboard %}
+    <table style="width:80%" border="1">
+        <tr>
+            <th>User</th>
+            <th>Score</th>
+        </tr>
+    {% for username, name, score in leaderboard %}
+        <tr>
+            <td><a href="{% url 'soccer:predictions' TOURNAMENT %}?user={{username}}">{{ name }}</a></td>
+            <td>{{ score }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+    <p>To view another user's predictions click on their name</p>
+    
+{% else %}
+    <p>Rome wasn't build in a day, bear with me</p>
+{% endif %}
+{% endblock %}

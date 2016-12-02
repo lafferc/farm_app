@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div align="center" style="border:1px solid red"> 
+        <h1>test_app</h1>
+    </div>
+    <p>Welcome to test_app, <a href="{% url 'soccer:index' %}">click here</a> to see our current competitions</p>
+{% endblock %}

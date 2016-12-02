@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block sub_head %}
+    {% load staticfiles %}
+    <style>
+        Body{
+            background-image: url({% static "soccer/ireland_euro_2016.png" %});
+        }
+        form{
+            background: green;
+        }
+        table{
+            background: green;
+        }
+        ul {
+            background: green;
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+        p{
+            background: green;
+        }
+        li {
+            display: inline;
+        }
+    </style>
+{% endblock %}
+
+{% block nav %}
+    
+{% if TOURNAMENT %}
+    <ul>
+    <li><a href="{% url 'soccer:submit' TOURNAMENT %}">Submit Predictions</a></li>
+    <li><a href="{% url 'soccer:predictions' TOURNAMENT %}">My_Predictions</a></li>
+    <li><a href="{% url 'soccer:table' TOURNAMENT %}">Leaderboard</a></li>
+    </ul>
+{% endif %}
+
+{% endblock %}

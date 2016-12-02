@@ -1,0 +1,31 @@
+{% extends "soccer_base.html" %}
+
+{% block content %}
+{% if fixture_list %}
+    <form method="post">{% csrf_token %}
+        <p>Note: all times are in UTC</p>
+        <p>Only predictions that are filled in will be sent to the server, leave the box blank if you want to fill it in later</p>
+        <p>Any prediction submitted after kick off will not be counted</p>
+        <table style="width:80%" border="1">
+            <tr>
+                <th>Match id</th>
+                <th>Your prediction</th>
+                <th>Match</th>
+                <th>Kick Off</th>
+            </tr>
+        {% for match in fixture_list %}
+            <tr>
+                <td>{{ match.match_id }}</td>
+                <td><input type="number" step="any" name="{{match.pk}}"></td>
+                <td>{{ match }}</td>
+                <td>{{ match.kick_off }}</td>
+            </tr>
+        {% endfor %}
+        </table>
+        <input type="submit" value="Submit" onclick="return confirm('Are you sure? You cannot change your predictions once submitted')"/>
+    </form>
+{% else %}
+    <p>There are no more matches to predict, try again later</p>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,19 @@
+<head>
+{% block sub_head %}
+{% endblock %}
+</head>
+
+<body>
+    <div align="right">
+    {% if user.is_authenticated %}
+        <p>Welcome, {{ user.username }}  <a href="{% url 'logout' %}">[logout]</a></p>
+    {% else %}
+        <p>Welcome, Guest <a href="{% url 'login' %}?next=/">[login]</a></p>
+    {% endif %}
+    </div>
+{% block nav %}
+{% endblock %}
+
+{% block content %}
+{% endblock %}
+</body>
