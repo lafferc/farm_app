@@ -18,11 +18,31 @@ class LambingYearInline(admin.TabularInline):
 
  
 class SheepAdmin(admin.ModelAdmin):
+    list_display = ("__str__", "gender", "age", "is_alive")
     inlines = ( DoseGivenInLine, WeightInLine, LambingYearInline)
+    list_filter = ( "gender", "age", "is_alive")
 
 
-admin.site.register(Dose)
+class DoseAdmin(admin.ModelAdmin):
+    list_display = ("name", "days")
+
+
+class WeightAdmin(admin.ModelAdmin):
+    list_display = ("sheep", "date", "value")
+    list_filter = (
+        ('sheep', admin.RelatedOnlyFieldListFilter),
+    )
+
+
+class LambingYearAdmin(admin.ModelAdmin):
+    list_display = ("sheep", "year", "scanned", "born", "yenned")
+    list_filter = (
+        "year",
+        ('sheep', admin.RelatedOnlyFieldListFilter),
+    )
+
+
+admin.site.register(Dose, DoseAdmin)
 admin.site.register(Sheep, SheepAdmin)
-admin.site.register(Weight)
-admin.site.register(LambingYear)
-
+admin.site.register(Weight, WeightAdmin)
+admin.site.register(LambingYear, LambingYearAdmin)
