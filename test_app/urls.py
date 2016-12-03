@@ -18,7 +18,7 @@ from . import views
 
 urlpatterns = [
     url(r'^$', views.index, name='index'),
-    url(r'^soccer/', include('soccer.urls', namespace="soccer")),
+    url(r'^competition/', include('competition.urls', namespace="competition")),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^accounts/', include('django.contrib.auth.urls'))
 ]
