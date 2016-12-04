@@ -4,6 +4,9 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django.db import IntegrityError, transaction
+import logging
+
+g_logger = logging.getLogger(__name__)
 
 
 class Sport(models.Model):
@@ -90,6 +93,7 @@ class Prediction(models.Model):
 
 @receiver(post_save, sender=Participant, dispatch_uid="add_draw_for_matches_already_played")
 def add_draws(sender, instance, created, **kwargs):
+    g_logger.info("add_draw_for_matches_already_played")
     if created:
         for match in Match.objects.filter(tournament=instance.tournament, kick_off__lt=timezone.now()):
             try:
@@ -100,6 +104,7 @@ def add_draws(sender, instance, created, **kwargs):
 
 
 def update_table(tournament):
+    g_logger.info("update_table")
     for participant in Participant.objects.filter(tournament=tournament):
         score = 0
         for prediction in Prediction.objects.filter(user=participant.user).filter(match__tournament=tournament):
@@ -111,6 +116,7 @@ def update_table(tournament):
 
 @receiver(post_save, sender=Match, dispatch_uid="cal_results_for_match")
 def add_draws(sender, instance, created, **kwargs):
+    g_logger.info("cal_results_for_match")
     if not created and instance.score is not None:
         for user in instance.tournament.participants.all():
             try:

@@ -1,5 +1,9 @@
 from django.contrib import admin
 from competition.models import Team, Tournament, Match, Prediction, Participant, update_table
+from competition.models import Sport
+import logging
+
+g_logger = logging.getLogger(__name__)
 
 
 class TeamAdmin(admin.ModelAdmin):
@@ -16,6 +20,7 @@ class ParticipantInline(admin.TabularInline):
 
 
 def pop_leaderboard(modeladmin, request, queryset):
+    g_logger.info("pop_leaderboard(%r, %r, %r", modeladmin, request, queryset)
     for tournament in queryset:
         update_table(tournament)
 
@@ -58,6 +63,7 @@ class PredictionAdmin(admin.ModelAdmin):
     list_filter = ('match','user')
 
 
+admin.site.register(Sport)
 admin.site.register(Team, TeamAdmin)
 admin.site.register(Tournament, TournamentAdmin)
 admin.site.register(Match, MatchAdmin)
