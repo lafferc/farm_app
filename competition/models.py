@@ -29,8 +29,10 @@ class Tournament(models.Model):
     name = models.CharField(max_length=200, unique=True)
     participants = models.ManyToManyField(User, through="Participant")
     sport = models.ForeignKey(Sport)
-    bonus = models.DecimalField(blank=True, null=True, max_digits=5, decimal_places=2, default=2);
+    bonus = models.DecimalField(blank=True, null=True, max_digits=5, decimal_places=2, default=2)
     late_get_bonus = models.BooleanField(default=True)
+    state = models.IntegerField(default=1, choices=((0, "Pending"), (1, "Active"), (2, "finished")))
+    winner = models.ForeignKey("Participant", null=True, blank=True, related_name='+')
 
     def __str__(self):
         return self.name
