@@ -1,5 +1,5 @@
 from django.contrib import admin
-from competition.models import Team, Tournament, Match, Prediction, Participant, update_table
+from competition.models import Team, Tournament, Match, Prediction, Participant
 from competition.models import Sport
 import logging
 
@@ -22,7 +22,7 @@ class ParticipantInline(admin.TabularInline):
 def pop_leaderboard(modeladmin, request, queryset):
     g_logger.info("pop_leaderboard(%r, %r, %r", modeladmin, request, queryset)
     for tournament in queryset:
-        update_table(tournament)
+        tournament.update_table()
 
 
 class TournamentAdmin(admin.ModelAdmin):
@@ -37,18 +37,11 @@ def calc_match_result(modeladmin, request, queryset):
         if match.score is None:
             continue
         if match.tournament not in tourns:
-            print("adding %s to list" % match.tournament)
+            g_logger.info("adding %s to list" % match.tournament)
             tourns.append(match.tournament)
-        for user in match.tournament.participants.all():
-            try:
-                prediction = Prediction.objects.get(user=user, match=match)
-            except Prediction.DoesNotExist:
-                print("%s did not predict %s" % (user, match))
-                prediction = Prediction(user=user, match=match)
-            prediction.calc_score(match.score)
-            prediction.save()
+        match.check_predictions()
     for tourn in tourns:
-        update_table(tourn)
+        tourn.update_table()
 
 
 class MatchAdmin(admin.ModelAdmin):
@@ -58,7 +51,7 @@ class MatchAdmin(admin.ModelAdmin):
 
 class PredictionAdmin(admin.ModelAdmin):
     list_display = ('user', 'match', 'entered')
-    readonly_fields = ('score',)
+    readonly_fields = ('score', "late")
 
     list_filter = ('match','user')
 

@@ -37,6 +37,16 @@ class Tournament(models.Model):
     def __str__(self):
         return self.name
 
+    def update_table(self):
+        g_logger.info("update_table")
+        for participant in Participant.objects.filter(tournament=self):
+            score = 0
+            for prediction in Prediction.objects.filter(user=participant.user).filter(match__tournament=self):
+                if prediction.score is not None:
+                    score += prediction.score
+            participant.score = score
+            participant.save()
+
 
 class Participant(models.Model):
     tournament = models.ForeignKey(Tournament)
@@ -60,6 +70,16 @@ class Match(models.Model):
 
     def __str__(self):
         return '%s V %s' % (self.home_team.code, self.away_team.code)
+
+    def check_predictions(self):
+        for user in self.tournament.participants.all():
+            try:
+                prediction = Prediction.objects.get(user=user, match=self)
+            except Prediction.DoesNotExist:
+                print("%s did not predict %s" % (user, match))
+                prediction = Prediction(user=user, match=self, late=True)
+            prediction.calc_score(self.score)
+            prediction.save()
 
     class Meta:
         unique_together = ('tournament', 'match_id',)
@@ -100,32 +120,14 @@ def add_draws(sender, instance, created, **kwargs):
         for match in Match.objects.filter(tournament=instance.tournament, kick_off__lt=timezone.now()):
             try:
                 with transaction.atomic():
-                    Prediction(user=instance.user, match=match).save()
+                    Prediction(user=instance.user, match=match, late=True).save()
             except IntegrityError:
-                print("User(%s) has already predicted %s" % (instance.user, match))
-
-
-def update_table(tournament):
-    g_logger.info("update_table")
-    for participant in Participant.objects.filter(tournament=tournament):
-        score = 0
-        for prediction in Prediction.objects.filter(user=participant.user).filter(match__tournament=tournament):
-            if prediction.score is not None:
-                score += prediction.score
-        participant.score = score
-        participant.save()
+                g_logger.exception("User(%s) has already predicted %s" % (instance.user, match))
 
 
 @receiver(post_save, sender=Match, dispatch_uid="cal_results_for_match")
-def add_draws(sender, instance, created, **kwargs):
+def update_scores(sender, instance, created, **kwargs):
     g_logger.info("cal_results_for_match")
     if not created and instance.score is not None:
-        for user in instance.tournament.participants.all():
-            try:
-                prediction = Prediction.objects.get(user=user, match=instance)
-            except Prediction.DoesNotExist:
-                print("User (%s) did not predict %s" % (user, instance))
-                prediction = Prediction(user=user, match=instance, late=True)
-            prediction.calc_score(instance.score)
-            prediction.save()
-        update_table(instance.tournament)
+        instance.check_predictions()
+        instance.tournament.update_table()
