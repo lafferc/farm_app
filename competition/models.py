@@ -1,16 +1,19 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django.db import IntegrityError, transaction
 import logging
+import csv
+import os
 
 g_logger = logging.getLogger(__name__)
 
 
 class Sport(models.Model):
     name = models.CharField(max_length=50, unique=True)
+    add_teams = models.FileField(null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -115,8 +118,8 @@ class Prediction(models.Model):
 
 @receiver(post_save, sender=Participant, dispatch_uid="add_draw_for_matches_already_played")
 def add_draws(sender, instance, created, **kwargs):
-    g_logger.info("add_draw_for_matches_already_played")
     if created:
+        g_logger.info("add_draw for %s", instance)
         for match in Match.objects.filter(tournament=instance.tournament, kick_off__lt=timezone.now()):
             try:
                 with transaction.atomic():
@@ -127,7 +130,24 @@ def add_draws(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Match, dispatch_uid="cal_results_for_match")
 def update_scores(sender, instance, created, **kwargs):
-    g_logger.info("cal_results_for_match")
     if not created and instance.score is not None:
+        g_logger.info("update_scores for %s", instance)
         instance.check_predictions()
         instance.tournament.update_table()
+
+@receiver(post_save, sender=Sport, dispatch_uid="handle_teams_csv_upload")
+def handle_team_upload(sender, instance, created, **kwargs):
+    if not instance.add_teams:
+        return
+    g_logger.info("handle_teams_upload for %s csv:%s" % (instance, instance.add_teams))
+    reader = csv.reader(instance.add_teams, delimiter=',')
+    for row in reader:
+        try:
+            with transaction.atomic():
+               Team(sport=instance, name=row[0], code=row[1]).save()
+        except IntegrityError:
+            g_logger.exception("Failed to add team")
+    os.remove(instance.add_teams.name)
+    instance.add_teams = None
+    instance.save()
+
