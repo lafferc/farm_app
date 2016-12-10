@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 import logging
 import csv
@@ -36,6 +37,7 @@ class Tournament(models.Model):
     late_get_bonus = models.BooleanField(default=True)
     state = models.IntegerField(default=1, choices=((0, "Pending"), (1, "Active"), (2, "finished")))
     winner = models.ForeignKey("Participant", null=True, blank=True, related_name='+')
+    add_matches = models.FileField(null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -50,6 +52,11 @@ class Tournament(models.Model):
             participant.score = score
             participant.save()
 
+    def find_team(self, name):
+        try:
+            return Team.objects.get(sport=self.sport, name=name)
+        except Team.DoesNotExist:
+            return Team.objects.get(sport=self.sport, code=name)
 
 class Participant(models.Model):
     tournament = models.ForeignKey(Tournament)
@@ -151,3 +158,23 @@ def handle_team_upload(sender, instance, created, **kwargs):
     instance.add_teams = None
     instance.save()
 
+@receiver(post_save, sender=Tournament, dispatch_uid="handle_matches_csv_upload")
+def handle_match_upload(sender, instance, created, **kwargs):
+    if not instance.add_matches:
+        return
+    g_logger.info("handle_match_upload for %s csv:%s" % (instance, instance.add_matches))
+    reader = csv.reader(instance.add_matches, delimiter=',')
+    for row in reader:
+        print row
+        try:
+            with transaction.atomic():
+                Match(tournament=instance,
+                      match_id=row[0],
+                      home_team=instance.find_team(row[1]),
+                      away_team=instance.find_team(row[2]),
+                      kick_off=row[3]).save()
+        except (IntegrityError, ValidationError, Team.DoesNotExist):
+            g_logger.exception("Failed to add match")
+    os.remove(instance.add_matches.name)
+    instance.add_matches = None
+    instance.save()
