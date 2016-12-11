@@ -10,5 +10,6 @@ def index(request):
     template = loader.get_template('home.html')
     context = {
         'live_tournaments': Tournament.objects.filter(state=1),
+        'closed_tournaments': Tournament.objects.filter(state=2),
     }
     return HttpResponse(template.render(context, request))

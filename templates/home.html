@@ -12,4 +12,12 @@
         {% endfor %}
         </ul>
     {% endif %}
+    {% if closed_tournaments %}
+    <h3>Previous competitions</h3>
+        <ul>
+        {% for tournament in closed_tournaments %}
+            <li>Congratulations to {{tournament.winner.user}} who won <a href="{% url 'competition:submit' tournament.name %}">{{ tournament.name }}</a> with a score of {{tournament.winner.score}}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
 {% endblock %}

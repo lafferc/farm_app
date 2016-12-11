@@ -27,15 +27,21 @@ class ParticipantInline(admin.TabularInline):
 
 
 def pop_leaderboard(modeladmin, request, queryset):
-    g_logger.debug("pop_leaderboard(%r, %r, %r", modeladmin, request, queryset)
+    g_logger.debug("pop_leaderboard(%r, %r, %r)", modeladmin, request, queryset)
     for tournament in queryset:
         tournament.update_table()
+
+
+def close_tournament(modeladmin, request, queryset):
+    g_logger.debug("close_tournament(%r, %r, %r)", modeladmin, request, queryset)
+    for tournament in queryset:
+        tournament.close()
 
 
 class TournamentAdmin(admin.ModelAdmin):
     list_display = ('name',)
     inlines = ( ParticipantInline, )
-    actions = [pop_leaderboard]
+    actions = [pop_leaderboard, close_tournament]
     list_filter = (
         ('sport', admin.RelatedOnlyFieldListFilter),
         "state",
@@ -52,7 +58,7 @@ class TournamentAdmin(admin.ModelAdmin):
         return ('winner')
 
     def get_fieldsets(self, request, obj):
-        if request.user.has_perm('Tournament.csv_upload'):
+        if request.user.has_perm('Tournament.csv_upload') and (not obj or obj.state != 2):
             return self.fieldsets
         return ((None, {'fields': ('name', 'sport', 'state', 'bonus', 'late_get_bonus', 'winner')}),)
 

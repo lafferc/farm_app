@@ -57,6 +57,15 @@ class Tournament(models.Model):
             return Team.objects.get(sport=self.sport, name=name)
         except Team.DoesNotExist:
             return Team.objects.get(sport=self.sport, code=name)
+
+    def close(self):
+        if self.state != 1:
+            return
+        self.update_table()
+        self.winner = Participant.objects.filter(tournament=self).order_by("-score")[0]
+        self.state = 2
+        self.save()
+
     class Meta:
         permissions = (
             ("csv_upload", "Can add matches via CSV upload file"),

@@ -1,4 +1,4 @@
-from django.shortcuts import render 
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, Http404
 from django.template import loader
 from django.contrib.auth.decorators import login_required
@@ -12,7 +12,7 @@ from .models import Tournament, Match, Prediction, Participant
 def index(request):
     template = loader.get_template('index.html')
     context = {
-        'tournaments': Tournament.objects.all(),
+        'all_tournaments': Tournament.objects.all(),
     }
     return HttpResponse(template.render(context, request))
 
@@ -23,6 +23,9 @@ def submit(request, tour_name):
         tournament = Tournament.objects.get(name=tour_name)
     except Tournament.DoesNotExist:
         raise Http404("Tournament does not exist")
+
+    if tournament.state == 2:
+        return redirect("table/")
 
     fixture_list = Match.objects.filter(tournament=tournament, kick_off__gt=timezone.now())
 
@@ -39,7 +42,7 @@ def submit(request, tour_name):
 
     template = loader.get_template('submit.html')
     context = {
-        'TOURNAMENT' : tournament.name,
+        'TOURNAMENT' : tournament,
         'fixture_list': fixture_list,
     }
     return HttpResponse(template.render(context, request))
@@ -81,7 +84,7 @@ def predictions(request, tour_name):
     context = {
         'other_user': other_user,
         'user_score': user_score,
-        'TOURNAMENT': tournament.name,
+        'TOURNAMENT': tournament,
         'predictions': predictions,
     }
     return HttpResponse(template.render(context, request))
@@ -105,6 +108,6 @@ def table(request, tour_name):
     template = loader.get_template('table.html')
     context = {
         'leaderboard': leaderboard,
-        'TOURNAMENT': tournament.name,
+        'TOURNAMENT': tournament,
     }
     return HttpResponse(template.render(context, request))
