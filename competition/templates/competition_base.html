@@ -18,10 +18,12 @@
     
 {% if TOURNAMENT %}
     <ul>
+    {% if is_participant %}
     {% if TOURNAMENT.state == 1 %}
     <li><a href="{% url 'competition:submit' TOURNAMENT.name %}">Submit Predictions</a></li>
     {% endif %}
     <li><a href="{% url 'competition:predictions' TOURNAMENT.name %}">My_Predictions</a></li>
+    {% endif %}
     <li><a href="{% url 'competition:table' TOURNAMENT.name %}">Leader board</a></li>
     </ul>
 {% endif %}

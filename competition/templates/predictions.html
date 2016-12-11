@@ -3,7 +3,9 @@
 {% block content %}
 {% if other_user %}
     <p>Here are the predictions that {{ other_user }} has made</p>
+    {% if is_participant %}
     <p>You cannot see the predictions for matches that you have not predicted</p>
+    {% endif %}
 {% elif user_score %}
     <p>Your current score is {{ user_score }}</p>
 {% endif %}

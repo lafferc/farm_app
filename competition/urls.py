@@ -7,4 +7,5 @@ urlpatterns = [
     url(r'^(?P<tour_name>\w+)/$', views.submit, name='submit'),
     url(r'^(?P<tour_name>\w+)/predictions/$', views.predictions, name='predictions'),
     url(r'^(?P<tour_name>\w+)/table/$', views.table, name='table'),
+    url(r'^(?P<tour_name>\w+)/join/$', views.join, name='join'),
 ]

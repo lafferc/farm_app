@@ -27,6 +27,9 @@ def submit(request, tour_name):
     if tournament.state == 2:
         return redirect("table/")
 
+    if not tournament.participants.filter(pk=request.user.pk).exists():
+        return redirect("join/") 
+
     fixture_list = Match.objects.filter(tournament=tournament, kick_off__gt=timezone.now())
 
     if request.method == 'POST':
@@ -44,6 +47,7 @@ def submit(request, tour_name):
     context = {
         'TOURNAMENT' : tournament,
         'fixture_list': fixture_list,
+        'is_participant': True,
     }
     return HttpResponse(template.render(context, request))
 
@@ -54,6 +58,12 @@ def predictions(request, tour_name):
         tournament = Tournament.objects.get(name=tour_name)
     except Tournament.DoesNotExist:
         raise Http404("Tournament does not exist")
+
+    is_participant = True
+    if not tournament.participants.filter(pk=request.user.pk).exists():
+        if tournament.state != 2:
+            return redirect("join/") 
+        is_participant = False
 
     other_user = None
     user_score = None
@@ -66,7 +76,7 @@ def predictions(request, tour_name):
             their_predictions = Prediction.objects.filter(user=other_user, match__tournament=tournament).order_by('match_id')
             predictions = []
             for prediction in their_predictions:
-                if prediction.match_id in my_predictions:
+                if prediction.match_id in my_predictions or not is_participant:
                     predictions.append(prediction)
             if other_user.first_name and other_user.last_name:
                 other_user = "%s %s" % (other_user.first_name, other_user.last_name)
@@ -77,6 +87,8 @@ def predictions(request, tour_name):
                   % (request.user, request.GET['user'], request.GET['user']))
 
     if not other_user:
+        if not is_participant:
+            return redirect("table/")
         user_score = Participant.objects.get(user=request.user, tournament=tournament).score
         predictions = Prediction.objects.filter(user=request.user, match__tournament=tournament).order_by('match_id')
 
@@ -86,6 +98,7 @@ def predictions(request, tour_name):
         'user_score': user_score,
         'TOURNAMENT': tournament,
         'predictions': predictions,
+        'is_participant': is_participant,
     }
     return HttpResponse(template.render(context, request))
 
@@ -96,6 +109,12 @@ def table(request, tour_name):
         tournament = Tournament.objects.get(name=tour_name)
     except Tournament.DoesNotExist:
         raise Http404("Tournament does not exist")
+
+    is_participant = True
+    if not tournament.participants.filter(pk=request.user.pk).exists():
+        if tournament.state != 2:
+            return redirect("join/") 
+        is_participant = False
 
     leaderboard = []
     for participant in Participant.objects.filter(tournament=tournament).order_by('score'):
@@ -109,5 +128,24 @@ def table(request, tour_name):
     context = {
         'leaderboard': leaderboard,
         'TOURNAMENT': tournament,
+        'is_participant': is_participant,
     }
     return HttpResponse(template.render(context, request))
+
+
+@login_required
+def join(request, tour_name):
+    try:
+        tournament = Tournament.objects.get(name=tour_name)
+    except Tournament.DoesNotExist:
+        raise Http404("Tournament does not exist")
+
+    if request.method == 'POST':
+        Participant(user=request.user, tournament=tournament).save()
+
+    template = loader.get_template('join.html')
+    context = {
+        'TOURNAMENT': tournament,
+    }
+    return HttpResponse(template.render(context, request))
+
