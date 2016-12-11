@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-
 {% block content %}
-{% if live_tournaments %}
+{% if all_tournaments %}
     <ul>
-    {% for tournament in live_tournaments %}
-        <li><a href="{% url 'soccer:submit' tournament.name %}">{{ tournament.name }}</a></li>
+    {% for tournament in all_tournaments %}
+        <li><a href="{% url 'competition:submit' tournament.name %}">{{ tournament.name }}</a></li>
     {% endfor %}
     </ul>
 {% else %}
     <p>There is nothing here, try again later</p>
 {% endif %}
 {% endblock %}
+

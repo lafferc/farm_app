@@ -4,5 +4,12 @@
     <div align="center" style="border:1px solid red"> 
         <h1>test_app</h1>
     </div>
-    <p>Welcome to test_app, <a href="{% url 'competitions:index' %}">click here</a> to see our current competitions</p>
+    {% if live_tournaments %}
+    <h3>Live competitions</h3>
+        <ul>
+        {% for tournament in live_tournaments %}
+            <li><a href="{% url 'competition:submit' tournament.name %}">{{ tournament.name }}</a></li>
+        {% endfor %}
+        </ul>
+    {% endif %}
 {% endblock %}

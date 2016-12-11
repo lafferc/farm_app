@@ -10,10 +10,9 @@ from .models import Tournament, Match, Prediction, Participant
 
 @login_required
 def index(request):
-    live_tournaments = Tournament.objects.all()
     template = loader.get_template('index.html')
     context = {
-        'live_tournaments': live_tournaments,
+        'tournaments': Tournament.objects.all(),
     }
     return HttpResponse(template.render(context, request))
 

@@ -1,4 +1,4 @@
-{% extends "soccer_base.html" %}
+{% extends "competition_base.html" %}
 
 {% block content %}
 {% if leaderboard %}
@@ -9,7 +9,7 @@
         </tr>
     {% for username, name, score in leaderboard %}
         <tr>
-            <td><a href="{% url 'soccer:predictions' TOURNAMENT %}?user={{username}}">{{ name }}</a></td>
+            <td><a href="{% url 'competition:predictions' TOURNAMENT %}?user={{username}}">{{ name }}</a></td>
             <td>{{ score }}</td>
         </tr>
     {% endfor %}
