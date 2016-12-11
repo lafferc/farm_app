@@ -57,6 +57,10 @@ class Tournament(models.Model):
             return Team.objects.get(sport=self.sport, name=name)
         except Team.DoesNotExist:
             return Team.objects.get(sport=self.sport, code=name)
+    class Meta:
+        permissions = (
+            ("csv_upload", "Can add matches via CSV upload file"),
+        )
 
 class Participant(models.Model):
     tournament = models.ForeignKey(Tournament)

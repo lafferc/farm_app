@@ -52,7 +52,9 @@ class TournamentAdmin(admin.ModelAdmin):
         return ('winner')
 
     def get_fieldsets(self, request, obj):
-        return ((None, {'fields': ('name', 'sport')}),)
+        if request.user.has_perm('Tournament.csv_upload'):
+            return self.fieldsets
+        return ((None, {'fields': ('name', 'sport', 'state', 'bonus', 'late_get_bonus', 'winner')}),)
 
 
 def calc_match_result(modeladmin, request, queryset):
