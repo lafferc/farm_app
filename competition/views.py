@@ -71,17 +71,19 @@ def predictions(request, tour_name):
     if request.GET:
         try:
             other_user = User.objects.get(username=request.GET['user'])
-
-            my_predictions = [ x['match_id'] for x in Prediction.objects.filter(user=request.user, match__tournament=tournament).values('match_id') ]
-            their_predictions = Prediction.objects.filter(user=other_user, match__tournament=tournament).order_by('match_id')
-            predictions = []
-            for prediction in their_predictions:
-                if prediction.match_id in my_predictions or not is_participant:
-                    predictions.append(prediction)
-            if other_user.first_name and other_user.last_name:
-                other_user = "%s %s" % (other_user.first_name, other_user.last_name)
+            if other_user == request.user:
+                other_user = None
             else:
-                other_user = other_user.username
+                my_predictions = [ x['match_id'] for x in Prediction.objects.filter(user=request.user, match__tournament=tournament).values('match_id') ]
+                their_predictions = Prediction.objects.filter(user=other_user, match__tournament=tournament).order_by('match_id')
+                predictions = []
+                for prediction in their_predictions:
+                    if prediction.match_id in my_predictions or not is_participant:
+                        predictions.append(prediction)
+                if other_user.first_name and other_user.last_name:
+                    other_user = "%s %s" % (other_user.first_name, other_user.last_name)
+                else:
+                    other_user = other_user.username
         except User.DoesNotExist:
             print("User(%s) tried to look at %s's predictions but '%s' does not exist"
                   % (request.user, request.GET['user'], request.GET['user']))
