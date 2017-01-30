@@ -16,7 +16,7 @@ class Team(models.Model):
 
 class Tournament(models.Model):
     name = models.CharField(max_length=200, unique=True)
-    participants = models.ManyToManyField(User, through="Participant")
+    participants = models.ManyToManyField(User, through="Participant", related_name='soc_tournament_participants')
 
     def __str__(self):
         return self.name
@@ -24,7 +24,7 @@ class Tournament(models.Model):
 
 class Participant(models.Model):
     tournament = models.ForeignKey(Tournament)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, related_name='soc_participant_user')
     score = models.DecimalField(blank=True, null=True, max_digits=5, decimal_places=2);
 
     def __str__(self):
@@ -51,7 +51,7 @@ class Match(models.Model):
 
 class Prediction(models.Model):
     entered = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, related_name='soc_prediction_user')
     match = models.ForeignKey(Match)
     prediction = models.DecimalField(default=0, max_digits=5, decimal_places=2)
     score = models.DecimalField(blank=True, null=True, max_digits=5, decimal_places=2);
