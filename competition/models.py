@@ -5,6 +5,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
+from django.core.mail import EmailMessage
 import logging
 import csv
 import os
@@ -62,8 +63,16 @@ class Tournament(models.Model):
         if self.state != 1:
             return
         self.update_table()
-        self.winner = Participant.objects.filter(tournament=self).order_by("-score")[0]
+        self.winner = Participant.objects.filter(tournament=self).order_by("score")[0]
         self.state = 2
+
+        subject = "Thank you for participating in %s" % self.name
+        body = "Congratulations to %s for winning %s with a score of %.2f" % (
+            self.winner, self.name, self.winner.score)
+        recipients = self.participants.values_list('email', flat=True)
+
+        email = EmailMessage(subject, body, to=recipients)
+        email.send()
         self.save()
 
     class Meta:
