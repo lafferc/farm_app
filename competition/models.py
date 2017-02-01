@@ -75,6 +75,20 @@ class Tournament(models.Model):
         email.send()
         self.save()
 
+    def open(self):
+        if self.state != 0:
+            g_logger.error("can only open tournaments that are pending")
+            return
+        self.state = 1
+        subject = "A new competition has started"
+        body = "You can now submit your predictions for %s. http:///competition/%s/join/" % (
+            self.name, self.name)
+        recipients = User.objects.all().values_list('email', flat=True)
+
+        email = EmailMessage(subject, body, to=recipients)
+        email.send()
+        self.save()
+
     class Meta:
         permissions = (
             ("csv_upload", "Can add matches via CSV upload file"),

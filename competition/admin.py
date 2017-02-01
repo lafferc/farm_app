@@ -38,10 +38,16 @@ def close_tournament(modeladmin, request, queryset):
         tournament.close()
 
 
+def open_tournament(modeladmin, request, queryset):
+    g_logger.debug("open_tournament(%r, %r, %r)", modeladmin, request, queryset)
+    for tournament in queryset:
+        tournament.open()
+
+
 class TournamentAdmin(admin.ModelAdmin):
     list_display = ('name',)
     inlines = ( ParticipantInline, )
-    actions = [pop_leaderboard, close_tournament]
+    actions = [pop_leaderboard, close_tournament, open_tournament]
     list_filter = (
         ('sport', admin.RelatedOnlyFieldListFilter),
         "state",
