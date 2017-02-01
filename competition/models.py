@@ -115,7 +115,7 @@ class Match(models.Model):
     score = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
-        return '%s V %s' % (self.home_team.code, self.away_team.code)
+        return '%s Vs %s' % (self.home_team, self.away_team)
 
     def check_predictions(self):
         for user in self.tournament.participants.all():
