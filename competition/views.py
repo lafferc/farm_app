@@ -4,6 +4,7 @@ from django.template import loader
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.db import IntegrityError
 
 from .models import Tournament, Match, Prediction, Participant
 
@@ -25,10 +26,10 @@ def submit(request, tour_name):
         raise Http404("Tournament does not exist")
 
     if tournament.state == 2:
-        return redirect("table/")
+        return redirect("competition:table", tour_name=tour_name) 
 
     if not tournament.participants.filter(pk=request.user.pk).exists():
-        return redirect("join/") 
+        return redirect("competition:join", tour_name=tour_name) 
 
     fixture_list = Match.objects.filter(tournament=tournament, kick_off__gt=timezone.now())
 
@@ -62,7 +63,7 @@ def predictions(request, tour_name):
     is_participant = True
     if not tournament.participants.filter(pk=request.user.pk).exists():
         if tournament.state != 2:
-            return redirect("join/") 
+            return redirect("competition:table", tour_name=tour_name)
         is_participant = False
 
     other_user = None
@@ -74,12 +75,7 @@ def predictions(request, tour_name):
             if other_user == request.user:
                 other_user = None
             else:
-                my_predictions = [ x['match_id'] for x in Prediction.objects.filter(user=request.user, match__tournament=tournament).values('match_id') ]
-                their_predictions = Prediction.objects.filter(user=other_user, match__tournament=tournament).order_by('match_id')
-                predictions = []
-                for prediction in their_predictions:
-                    if prediction.match_id in my_predictions or not is_participant:
-                        predictions.append(prediction)
+                predictions = Prediction.objects.filter(user=other_user, match__tournament=tournament, match__kick_off__lt=timezone.now()).order_by('match_id')
                 if other_user.first_name and other_user.last_name:
                     other_user = "%s %s" % (other_user.first_name, other_user.last_name)
                 else:
@@ -90,7 +86,7 @@ def predictions(request, tour_name):
 
     if not other_user:
         if not is_participant:
-            return redirect("table/")
+            return redirect("competition:table", tour_name=tour_name)
         user_score = Participant.objects.get(user=request.user, tournament=tournament).score
         predictions = Prediction.objects.filter(user=request.user, match__tournament=tournament).order_by('match_id')
 
@@ -115,7 +111,7 @@ def table(request, tour_name):
     is_participant = True
     if not tournament.participants.filter(pk=request.user.pk).exists():
         if tournament.state != 2:
-            return redirect("join/") 
+            return redirect("competition:join", tour_name=tour_name) 
         is_participant = False
 
     leaderboard = []
@@ -143,7 +139,11 @@ def join(request, tour_name):
         raise Http404("Tournament does not exist")
 
     if request.method == 'POST':
-        Participant(user=request.user, tournament=tournament).save()
+        try:
+            Participant(user=request.user, tournament=tournament).save()
+        except IntegrityError:
+            pass
+        return redirect('competition:submit' , tour_name=tour_name)
 
     template = loader.get_template('join.html')
     context = {
