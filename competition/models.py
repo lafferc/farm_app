@@ -22,12 +22,16 @@ class Sport(models.Model):
 
 
 class Team(models.Model):
-    name = models.CharField(max_length=200, unique=True)
-    code = models.CharField(max_length=3, unique=True)
+    name = models.CharField(max_length=200)
+    code = models.CharField(max_length=3)
     sport = models.ForeignKey(Sport)
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        unique_together = ('code', 'sport',)
+        unique_together = ('code', 'sport',)
 
 
 class Tournament(models.Model):
@@ -122,7 +126,7 @@ class Match(models.Model):
             try:
                 prediction = Prediction.objects.get(user=user, match=self)
             except Prediction.DoesNotExist:
-                print("%s did not predict %s" % (user, match))
+                print("%s did not predict %s" % (user, self))
                 prediction = Prediction(user=user, match=self, late=True)
             prediction.calc_score(self.score)
             prediction.save()
