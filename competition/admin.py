@@ -35,13 +35,13 @@ def pop_leaderboard(modeladmin, request, queryset):
 def close_tournament(modeladmin, request, queryset):
     g_logger.debug("close_tournament(%r, %r, %r)", modeladmin, request, queryset)
     for tournament in queryset:
-        tournament.close()
+        tournament.close(request)
 
 
 def open_tournament(modeladmin, request, queryset):
     g_logger.debug("open_tournament(%r, %r, %r)", modeladmin, request, queryset)
     for tournament in queryset:
-        tournament.open()
+        tournament.open(request)
 
 
 class TournamentAdmin(admin.ModelAdmin):
@@ -60,7 +60,7 @@ class TournamentAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj):
         if obj:
-            return ('sport', 'bonus', 'late_get_bonus', 'winner')
+            return ('sport', 'bonus', 'late_get_bonus', 'winner', 'state')
         return ('winner')
 
     def get_fieldsets(self, request, obj):

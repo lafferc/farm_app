@@ -1,14 +1,16 @@
-from django.db import models
-from django.contrib.auth.models import User
+from django.db import models, IntegrityError, transaction
 from django.db.models.signals import post_save, pre_save
+from django.contrib.auth.models import User
+from django.contrib.sites.shortcuts import get_current_site
 from django.dispatch import receiver
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
 from django.core.mail import EmailMessage
+from django.template.loader import render_to_string, get_template
 import logging
 import csv
 import os
+import smtplib
 
 g_logger = logging.getLogger(__name__)
 
@@ -63,34 +65,54 @@ class Tournament(models.Model):
         except Team.DoesNotExist:
             return Team.objects.get(sport=self.sport, code=name)
 
-    def close(self):
+    def close(self, request):
         if self.state != 1:
             return
         self.update_table()
         self.winner = Participant.objects.filter(tournament=self).order_by("score")[0]
         self.state = 2
 
+        current_site = get_current_site(request)
         subject = "Thank you for participating in %s" % self.name
-        body = "Congratulations to %s for winning %s with a score of %.2f" % (
-            self.winner, self.name, self.winner.score)
-        recipients = self.participants.values_list('email', flat=True)
 
-        email = EmailMessage(subject, body, to=recipients)
-        email.send()
+        for user in self.participants.all():
+            message = render_to_string('close_email.html', {
+                'user': user,
+                'winner': self.winner,
+                'winner_score': "%.2f" % self.winner.score,
+                'tournament_name': self.name,
+                'site_name': current_site.name,
+            })
+            try:
+                user.email_user(subject, message)
+            except smtplib.SMTPRecipientsRefused:
+                g_logger.error("Recipient Refused:'%s' (user: %s)", 
+                               user.email, user)
+
         self.save()
 
-    def open(self):
+    def open(self, request):
         if self.state != 0:
             g_logger.error("can only open tournaments that are pending")
             return
         self.state = 1
-        subject = "A new competition has started"
-        body = "You can now submit your predictions for %s. http:///competition/%s/join/" % (
-            self.name, self.name)
-        recipients = User.objects.all().values_list('email', flat=True)
 
-        email = EmailMessage(subject, body, to=recipients)
-        email.send()
+        current_site = get_current_site(request)
+        subject = "A new competition has started"
+        for user in User.objects.all():
+            message = render_to_string('open_email.html', {
+                'user': user,
+                'tournament_name': self.name,
+                'tournament_link': self.name,
+                'site_name': current_site.name,
+                'site_domain': current_site.name,
+                'protocol': 'https' if request.is_secure() else 'http',
+            })
+            try:
+                user.email_user(subject, message)
+            except smtplib.SMTPRecipientsRefused:
+                g_logger.error("Recipient Refused:'%s' (user: %s)", 
+                               user.email, user)
         self.save()
 
     class Meta:
@@ -205,7 +227,9 @@ def handle_match_upload(sender, instance, created, **kwargs):
     g_logger.info("handle_match_upload for %s csv:%s" % (instance, instance.add_matches))
     reader = csv.reader(instance.add_matches, delimiter=',')
     for row in reader:
-        print row
+        g_logger.debug("Row: %r" % row)
+        if not row:
+            continue
         try:
             with transaction.atomic():
                 Match(tournament=instance,

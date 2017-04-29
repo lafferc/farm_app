@@ -1,0 +1,9 @@
+{% load i18n %}{% autoescape off %}
+
+{% trans "Hi" %} {{ user.username }},
+
+{% blocktrans %}Congratulations to {{ winner }} for winning {{ tournament_name }} with a score of {{ winner_score }} {% endblocktrans %}
+
+{% blocktrans %}The {{ site_name }} team{% endblocktrans %}
+
+{% endautoescape %}
