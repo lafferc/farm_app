@@ -14,11 +14,19 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
+from django.views.generic import TemplateView
 from . import views
 
 urlpatterns = [
     url(r'^$', views.index, name='index'),
     url(r'^competition/', include('competition.urls', namespace="competition")),
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^register/$', views.signup, name='signup'),
+    url(r'^register/activation_sent/$',
+        TemplateView.as_view(
+            template_name='registration/activation_sent.html'),
+        name='activation_sent'),
+    url(r'^activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
+        views.activate, name='activate'),
     url(r'^accounts/', include('django.contrib.auth.urls')),
 ]
