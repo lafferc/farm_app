@@ -36,8 +36,10 @@ def signup(request):
             message = render_to_string('registration/activation_email.html', {
                 'user': user,
                 'domain': current_site.domain,
+                'site_name': current_site.name,
                 'uid': urlsafe_base64_encode(force_bytes(user.pk)),
                 'token': account_activation_token.make_token(user),
+                'protocol': 'https' if request.is_secure() else 'http',
             })
             user.email_user(subject, message)
             return redirect('activation_sent')

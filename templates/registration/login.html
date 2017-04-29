@@ -35,4 +35,8 @@ please login with an account that has access.</p>
 {# Assumes you setup the password_reset view in your URLconf #}
 <p><a href="{% url 'password_reset' %}">Lost password?</a></p>
 
+<div>
+    <h3>New to {{ site_name }} ?</h3>
+    <p><a href="{% url 'signup' %}">Sign up here</a></p>
+</div>
 {% endblock %}
