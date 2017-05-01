@@ -23,7 +23,7 @@ $(function() {
     <form method="post">{% csrf_token %}
         <p>Note: all times are in local time (<a id="tz_str"></a>)</p>
         <p>Only predictions that are filled in will be sent to the server, leave the box blank if you want to fill it in later</p>
-        <p>Any prediction submitted after kick off will not be counted</p>
+        <p>Any prediction submitted after {{ TOURNAMENT.sport.match_start_verb|lower }} will not be counted.</p>
         <table style="width:80%" border="1">
             <tr>
                 <th>Match id</th>
