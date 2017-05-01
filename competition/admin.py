@@ -54,19 +54,19 @@ class TournamentAdmin(admin.ModelAdmin):
     )
     fieldsets = (
         (None, {
-            'fields': ('name', 'sport', 'state', 'bonus', 'late_get_bonus', 'winner', 'add_matches')
+            'fields': ('name', 'sport', 'state', 'bonus', 'draw_bonus', 'late_get_bonus', 'winner', 'add_matches')
         }),
     )
 
     def get_readonly_fields(self, request, obj):
         if obj:
-            return ('sport', 'bonus', 'late_get_bonus', 'winner', 'state')
+            return ('sport', 'bonus', 'late_get_bonus', 'draw_bonus', 'winner', 'state')
         return ('winner')
 
     def get_fieldsets(self, request, obj):
         if request.user.has_perm('Tournament.csv_upload') and (not obj or obj.state != 2):
             return self.fieldsets
-        return ((None, {'fields': ('name', 'sport', 'state', 'bonus', 'late_get_bonus', 'winner')}),)
+        return ((None, {'fields': ('name', 'sport', 'state', 'bonus', 'draw_bonus', 'late_get_bonus', 'winner')}),)
 
 
 def calc_match_result(modeladmin, request, queryset):

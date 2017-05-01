@@ -148,6 +148,7 @@ def join(request, tour_name):
     template = loader.get_template('join.html')
     context = {
         'TOURNAMENT': tournament,
+        'draw_bonus_value': tournament.bonus * tournament.draw_bonus,
     }
     return HttpResponse(template.render(context, request))
 

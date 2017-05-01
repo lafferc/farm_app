@@ -40,8 +40,9 @@ class Tournament(models.Model):
     name = models.CharField(max_length=200, unique=True)
     participants = models.ManyToManyField(User, through="Participant")
     sport = models.ForeignKey(Sport)
-    bonus = models.DecimalField(blank=True, null=True, max_digits=5, decimal_places=2, default=2)
-    late_get_bonus = models.BooleanField(default=True)
+    bonus = models.DecimalField(max_digits=5, decimal_places=2, default=2)
+    draw_bonus = models.DecimalField(max_digits=5, decimal_places=2, default=1)
+    late_get_bonus = models.BooleanField(default=False)
     state = models.IntegerField(default=1, choices=((0, "Pending"), (1, "Active"), (2, "finished")))
     winner = models.ForeignKey("Participant", null=True, blank=True, related_name='+')
     add_matches = models.FileField(null=True, blank=True)
@@ -170,15 +171,17 @@ class Prediction(models.Model):
 
     def calc_score(self, result):
         if self.prediction == result:
-            self.score = -self.bonus()
+            self.score = -self.bonus(result)
         elif (self.prediction < 0 and result < 0) or (self.prediction > 0 and result > 0):
-            self.score = abs(result - self.prediction) - self.bonus()
+            self.score = abs(result - self.prediction) - self.bonus(result)
         else:
             self.score = abs(result - self.prediction)
 
-    def bonus(self):
+    def bonus(self, result):
         if self.late and not self.match.tournament.late_get_bonus:
             return 0
+        if result == 0: # draw 
+            return self.match.tournament.bonus * self.match.tournament.draw_bonus
         return self.match.tournament.bonus
 
     class Meta:
