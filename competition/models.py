@@ -17,6 +17,8 @@ g_logger = logging.getLogger(__name__)
 
 class Sport(models.Model):
     name = models.CharField(max_length=50, unique=True)
+    scoring_unit = models.CharField(max_length=50, default="point")
+    match_start_verb = models.CharField(max_length=50, default="Kick Off")
     add_teams = models.FileField(null=True, blank=True)
 
     def __str__(self):
@@ -136,7 +138,7 @@ class Participant(models.Model):
 class Match(models.Model):
     tournament = models.ForeignKey(Tournament)
     match_id = models.IntegerField()
-    kick_off = models.DateTimeField()
+    kick_off = models.DateTimeField(verbose_name='Start Time')
     home_team = models.ForeignKey(Team, related_name='match_home_team')
     away_team = models.ForeignKey(Team, related_name='match_away_team')
     score = models.IntegerField(blank=True, null=True)
