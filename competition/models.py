@@ -266,11 +266,12 @@ def handle_team_upload(sender, instance, created, **kwargs):
     if not instance.add_teams:
         return
     g_logger.info("handle_teams_upload for %s csv:%s" % (instance, instance.add_teams))
-    reader = csv.reader(instance.add_teams, delimiter=',')
+    reader = csv.DictReader(instance.add_teams, delimiter=',')
     for row in reader:
         try:
+            row['sport'] = instance
             with transaction.atomic():
-               Team(sport=instance, name=row[0], code=row[1]).save()
+               Team(**row).save()
         except IntegrityError:
             g_logger.exception("Failed to add team")
     os.remove(instance.add_teams.name)
@@ -282,18 +283,17 @@ def handle_match_upload(sender, instance, created, **kwargs):
     if not instance.add_matches:
         return
     g_logger.info("handle_match_upload for %s csv:%s" % (instance, instance.add_matches))
-    reader = csv.reader(instance.add_matches, delimiter=',')
+    reader = csv.DictReader(instance.add_matches, delimiter=',')
     for row in reader:
         g_logger.debug("Row: %r" % row)
         if not row:
             continue
         try:
+            row['tournament'] = instance
+            row['home_team'] = instance.find_team(row['home_team'])
+            row['away_team'] = instance.find_team(row['away_team'])
             with transaction.atomic():
-                Match(tournament=instance,
-                      match_id=row[0],
-                      home_team=instance.find_team(row[1]),
-                      away_team=instance.find_team(row[2]),
-                      kick_off=row[3]).save()
+                Match(**row).save()
         except (IntegrityError, ValidationError, Team.DoesNotExist):
             g_logger.exception("Failed to add match")
     os.remove(instance.add_matches.name)
