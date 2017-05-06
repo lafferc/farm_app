@@ -290,11 +290,21 @@ def handle_match_upload(sender, instance, created, **kwargs):
             continue
         try:
             row['tournament'] = instance
-            row['home_team'] = instance.find_team(row['home_team'])
-            row['away_team'] = instance.find_team(row['away_team'])
+            if row['home_team'] == "TBD":
+                row['home_team'] = None
+                row['home_team_winner_of'] = instance.match_set.get(match_id=row['home_team_winner_of'])
+            else:
+                row['home_team'] = instance.find_team(row['home_team'])
+                row['home_team_winner_of'] = None
+            if row['away_team'] == "TBD":
+                row['away_team'] = None
+                row['away_team_winner_of'] = instance.match_set.get(match_id=row['away_team_winner_of'])
+            else:
+                row['away_team'] = instance.find_team(row['away_team'])
+                row['away_team_winner_of'] = None
             with transaction.atomic():
                 Match(**row).save()
-        except (IntegrityError, ValidationError, Team.DoesNotExist):
+        except (IntegrityError, ValidationError, Team.DoesNotExist, Match.DoesNotExist):
             g_logger.exception("Failed to add match")
     os.remove(instance.add_matches.name)
     instance.add_matches = None
