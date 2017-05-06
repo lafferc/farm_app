@@ -51,10 +51,11 @@ class TournamentAdmin(admin.ModelAdmin):
     list_filter = (
         ('sport', admin.RelatedOnlyFieldListFilter),
         "state",
+        "year",
     )
     fieldsets = (
         (None, {
-            'fields': ('name', 'sport', 'state', 'bonus', 'draw_bonus', 'late_get_bonus', 'winner', 'add_matches')
+            'fields': ('name', 'sport', 'state', 'bonus', 'draw_bonus', 'late_get_bonus', 'year', 'winner', 'add_matches')
         }),
     )
 
@@ -64,10 +65,10 @@ class TournamentAdmin(admin.ModelAdmin):
         return ('winner')
 
     def get_fieldsets(self, request, obj):
-        if request.user.has_perm('Tournament.csv_upload') and (not obj or obj.state != 2):
+        if request.user.has_perm('Tournament.csv_upload') and (not obj or obj.state not in [2, 3]):
             return self.fieldsets
         return ((None, {'fields': ('name', 'sport', 'state', 'bonus', 'draw_bonus',
-                                   'late_get_bonus', 'winner')}),)
+                                   'late_get_bonus', 'year', 'winner')}),)
 
 
 def calc_match_result(modeladmin, request, queryset):

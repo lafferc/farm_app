@@ -11,8 +11,15 @@ import logging
 import csv
 import os
 import smtplib
+import datetime
 
 g_logger = logging.getLogger(__name__)
+
+def current_year():
+    return datetime.datetime.today().year
+
+
+YEAR_CHOICES = [(r, r) for r in range(2016, current_year() + 1)]
 
 
 class Sport(models.Model):
@@ -45,9 +52,10 @@ class Tournament(models.Model):
     bonus = models.DecimalField(max_digits=5, decimal_places=2, default=2)
     draw_bonus = models.DecimalField(max_digits=5, decimal_places=2, default=1)
     late_get_bonus = models.BooleanField(default=False)
-    state = models.IntegerField(default=1, choices=((0, "Pending"), (1, "Active"), (2, "finished")))
+    state = models.IntegerField(default=1, choices=((0, "Pending"), (1, "Active"), (2, "finished"), (3, "archived")))
     winner = models.ForeignKey("Participant", null=True, blank=True, related_name='+')
     add_matches = models.FileField(null=True, blank=True)
+    year = models.IntegerField(choices=YEAR_CHOICES, default=current_year)
 
     def __str__(self):
         return self.name
