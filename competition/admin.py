@@ -66,7 +66,8 @@ class TournamentAdmin(admin.ModelAdmin):
     def get_fieldsets(self, request, obj):
         if request.user.has_perm('Tournament.csv_upload') and (not obj or obj.state != 2):
             return self.fieldsets
-        return ((None, {'fields': ('name', 'sport', 'state', 'bonus', 'draw_bonus', 'late_get_bonus', 'winner')}),)
+        return ((None, {'fields': ('name', 'sport', 'state', 'bonus', 'draw_bonus',
+                                   'late_get_bonus', 'winner')}),)
 
 
 def calc_match_result(modeladmin, request, queryset):
@@ -90,13 +91,28 @@ class MatchAdmin(admin.ModelAdmin):
     actions = [calc_match_result]
     fieldsets = (
         (None, {
-            'fields': ('tournament', 'match_id', 'home_team', 'away_team', 'kick_off', 'score')
+            'fields': ('tournament', 'match_id', 'home_team', 'home_team_winner_of',
+                       'away_team', 'away_team_winner_of', 'kick_off', 'score')
         }),
     )
     def get_readonly_fields(self, request, obj):
         if obj:
             return ('tournament', 'match_id', 'home_team', 'away_team')
         return ('score',)
+
+    def get_fieldsets(self, request, obj):
+        if not obj:
+            return self.fieldsets
+        if not obj.home_team and not obj.away_team:
+            return self.fieldsets
+        if not obj.home_team:
+            return ( (None, { 'fields': ('tournament', 'match_id', 'home_team',
+                                         'home_team_winner_of', 'away_team', 'kick_off', 'score')
+                            }),)
+        if not obj.away_team:
+            return ( (None, { 'fields': ('tournament', 'match_id', 'home_team', 'away_team',
+                                         'away_team_winner_of', 'kick_off', 'score') }),)
+        return ( (None, { 'fields': ('tournament', 'match_id', 'home_team', 'away_team', 'kick_off', 'score') }),)
 
 
 class PredictionAdmin(admin.ModelAdmin):

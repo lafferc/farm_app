@@ -35,7 +35,7 @@ class Team(models.Model):
 
     class Meta:
         unique_together = ('code', 'sport',)
-        unique_together = ('code', 'sport',)
+        unique_together = ('name', 'sport',)
 
 
 class Tournament(models.Model):
@@ -139,12 +139,38 @@ class Match(models.Model):
     tournament = models.ForeignKey(Tournament)
     match_id = models.IntegerField()
     kick_off = models.DateTimeField(verbose_name='Start Time')
-    home_team = models.ForeignKey(Team, related_name='match_home_team')
-    away_team = models.ForeignKey(Team, related_name='match_away_team')
+    home_team = models.ForeignKey(Team, related_name='match_home_team', null=True, blank=True)
+    home_team_winner_of = models.ForeignKey('self', blank=True, null=True, related_name='match_next_home')
+    away_team = models.ForeignKey(Team, related_name='match_away_team', null=True, blank=True)
+    away_team_winner_of = models.ForeignKey('self', blank=True, null=True, related_name='match_next_away')
     score = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
-        return '%s Vs %s' % (self.home_team, self.away_team)
+        s = ''
+        if not self.home_team:
+            s += self.home_team_winner_of.to_be_decided_str()
+        else:
+            s += self.home_team.name
+        s += " Vs "
+        if not self.away_team:
+            s += self.away_team_winner_of.to_be_decided_str()
+        else:
+            s += self.away_team.name
+        return s
+
+    def to_be_decided_str(self):
+        s = ''
+        if not self.home_team:
+            s += self.home_team_winner_of.to_be_decided_str()
+        else:
+            s += self.home_team.name
+        s += "/"
+        if not self.away_team:
+            s += self.away_team_winner_of.to_be_decided_str()
+        else:
+            s += self.away_team.name
+        return s
+            
 
     def check_predictions(self):
         for user in self.tournament.participants.all():
@@ -155,6 +181,28 @@ class Match(models.Model):
                 prediction = Prediction(user=user, match=self, late=True)
             prediction.calc_score(self.score)
             prediction.save()
+
+    def check_next_round_matches(self):
+        if not self.score:
+            return #no winner
+        if self.score > 0:
+            winner = self.home_team
+        else:
+            winner = self.away_team
+        try:
+            next_round = self.match_next_home.get()
+            next_round.home_team = winner
+            next_round.home_team_winner_of = None
+            next_round.save()
+        except Match.DoesNotExist:
+            pass
+        try:
+            next_round = self.match_next_away.get()
+            next_round.away_team = winner
+            next_round.away_team_winner_of = None
+            next_round.save()
+        except Match.DoesNotExist:
+            pass
 
     class Meta:
         unique_together = ('tournament', 'match_id',)
@@ -203,11 +251,15 @@ def add_draws(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender=Match, dispatch_uid="cal_results_for_match")
-def update_scores(sender, instance, created, **kwargs):
+def on_match_saved(sender, instance, created, **kwargs):
     if not created and instance.score is not None:
         g_logger.info("update_scores for %s", instance)
         instance.check_predictions()
         instance.tournament.update_table()
+        g_logger.info("checking for next round matches: %s", instance)
+        instance.check_next_round_matches()
+
+
 
 @receiver(post_save, sender=Sport, dispatch_uid="handle_teams_csv_upload")
 def handle_team_upload(sender, instance, created, **kwargs):
