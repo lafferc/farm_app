@@ -119,7 +119,10 @@ def table(request, tour_name):
         name = "%s %s" % (participant.user.first_name, participant.user.last_name)
         if name == " ":
             name = participant.user.username
-        leaderboard.append((participant.user.username, name, participant.score))
+        leaderboard.append((participant.user.username,
+                            name,
+                            participant.score,
+                            participant.margin_per_match))
 
 
     template = loader.get_template('table.html')

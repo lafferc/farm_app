@@ -55,7 +55,8 @@ class TournamentAdmin(admin.ModelAdmin):
     )
     fieldsets = (
         (None, {
-            'fields': ('name', 'sport', 'state', 'bonus', 'draw_bonus', 'late_get_bonus', 'year', 'winner', 'add_matches')
+            'fields': ('name', 'sport', 'state', 'bonus', 'draw_bonus', 'late_get_bonus', 'year',
+                       'winner', 'add_matches', 'display_margin_per_game')
         }),
     )
 

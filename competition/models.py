@@ -56,6 +56,7 @@ class Tournament(models.Model):
     winner = models.ForeignKey("Participant", null=True, blank=True, related_name='+')
     add_matches = models.FileField(null=True, blank=True)
     year = models.IntegerField(choices=YEAR_CHOICES, default=current_year)
+    display_margin_per_game = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -64,10 +65,16 @@ class Tournament(models.Model):
         g_logger.info("update_table")
         for participant in Participant.objects.filter(tournament=self):
             score = 0
+            total_margin = 0
+            num_predictions = 0
             for prediction in Prediction.objects.filter(user=participant.user).filter(match__tournament=self):
                 if prediction.score is not None:
                     score += prediction.score
+                if prediction.margin is not None:
+                    total_margin += prediction.margin
+                    num_predictions += 1
             participant.score = score
+            participant.margin_per_match = (total_margin / num_predictions)
             participant.save()
 
     def find_team(self, name):
@@ -135,6 +142,7 @@ class Participant(models.Model):
     tournament = models.ForeignKey(Tournament)
     user = models.ForeignKey(User)
     score = models.DecimalField(blank=True, null=True, max_digits=5, decimal_places=2);
+    margin_per_match = models.DecimalField(blank=True, null=True, max_digits=5, decimal_places=2);
 
     def __str__(self):
         return "%s" % self.user
@@ -223,17 +231,19 @@ class Prediction(models.Model):
     prediction = models.DecimalField(default=0, max_digits=5, decimal_places=2)
     score = models.DecimalField(blank=True, null=True, max_digits=5, decimal_places=2);
     late = models.BooleanField(blank=True, default=False)
+    margin = models.DecimalField(blank=True, null=True, max_digits=5, decimal_places=2);
 
     def __str__(self):
         return "%s: %s" % (self.user, self.match)
 
     def calc_score(self, result):
+        self.margin = abs(result - self.prediction)
         if self.prediction == result:
             self.score = -self.bonus(result)
         elif (self.prediction < 0 and result < 0) or (self.prediction > 0 and result > 0):
-            self.score = abs(result - self.prediction) - self.bonus(result)
+            self.score = self.margin - self.bonus(result)
         else:
-            self.score = abs(result - self.prediction)
+            self.score = self.margin
 
     def bonus(self, result):
         if self.late and not self.match.tournament.late_get_bonus:
