@@ -2,21 +2,12 @@
 
 {% block style %}
     {% load staticfiles %}
-    <style>
-        ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-        }
-        li {
-            display: inline;
-        }
-    </style>
 {% endblock %}
 
 {% block nav %}
     
 {% if TOURNAMENT %}
+<div data-role="navbar">
     <ul>
     {% if is_participant %}
     {% if TOURNAMENT.state == 1 %}
@@ -26,6 +17,7 @@
     {% endif %}
     <li><a href="{% url 'competition:table' TOURNAMENT.name %}">Leader board</a></li>
     </ul>
+</div>
 {% endif %}
 
 {% endblock %}

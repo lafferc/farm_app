@@ -4,6 +4,7 @@ from django.template import loader
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.contrib.sites.shortcuts import get_current_site
 from django.db import IntegrityError
 
 from .models import Tournament, Match, Prediction, Participant
@@ -12,7 +13,9 @@ from .models import Tournament, Match, Prediction, Participant
 @login_required
 def index(request):
     template = loader.get_template('index.html')
+    current_site = get_current_site(request)
     context = {
+        'site_name': current_site.name,
         'all_tournaments': Tournament.objects.all(),
     }
     return HttpResponse(template.render(context, request))
@@ -44,8 +47,10 @@ def submit(request, tour_name):
             fixture_list = fixture_list.exclude(pk=prediction.match.pk)
 
 
+    current_site = get_current_site(request)
     template = loader.get_template('submit.html')
     context = {
+        'site_name': current_site.name,
         'TOURNAMENT' : tournament,
         'fixture_list': fixture_list,
         'is_participant': True,
@@ -90,8 +95,10 @@ def predictions(request, tour_name):
         user_score = Participant.objects.get(user=request.user, tournament=tournament).score
         predictions = Prediction.objects.filter(user=request.user, match__tournament=tournament).order_by('match_id')
 
+    current_site = get_current_site(request)
     template = loader.get_template('predictions.html')
     context = {
+        'site_name': current_site.name,
         'other_user': other_user,
         'user_score': user_score,
         'TOURNAMENT': tournament,
@@ -125,8 +132,10 @@ def table(request, tour_name):
                             participant.margin_per_match))
 
 
+    current_site = get_current_site(request)
     template = loader.get_template('table.html')
     context = {
+        'site_name': current_site.name,
         'leaderboard': leaderboard,
         'TOURNAMENT': tournament,
         'is_participant': is_participant,
@@ -148,8 +157,10 @@ def join(request, tour_name):
             pass
         return redirect('competition:submit' , tour_name=tour_name)
 
+    current_site = get_current_site(request)
     template = loader.get_template('join.html')
     context = {
+        'site_name': current_site.name,
         'TOURNAMENT': tournament,
         'draw_bonus_value': tournament.bonus * tournament.draw_bonus,
     }

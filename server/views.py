@@ -16,8 +16,10 @@ from .tokens import account_activation_token
 
 @login_required
 def index(request):
+    current_site = get_current_site(request)
     template = get_template('home.html')
     context = {
+        'site_name': current_site.name,
         'live_tournaments': Tournament.objects.filter(state=1),
         'closed_tournaments': Tournament.objects.filter(state=2),
     }

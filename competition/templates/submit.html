@@ -24,7 +24,7 @@ $(function() {
         <p>Note: all times are in local time (<a id="tz_str"></a>)</p>
         <p>Only predictions that are filled in will be sent to the server, leave the box blank if you want to fill it in later</p>
         <p>Any prediction submitted after {{ TOURNAMENT.sport.match_start_verb|lower }} will not be counted.</p>
-        <table style="width:80%" border="1">
+        <table style="width:auto" border="1">
             <tr>
                 <th>Match id</th>
                 <th>Your prediction</th>
@@ -34,7 +34,7 @@ $(function() {
         {% for match in fixture_list %}
             <tr>
                 <td>{{ match.match_id }}</td>
-                <td><input type="number" step="any" name="{{match.pk}}"></td>
+                <td><input type="text" name="{{match.pk}}"></td>
                 <td>{{ match }}</td>
                 <td class="toLocalTime">{{ match.kick_off|date:"Y-m-d H:i:s" }}</td>
             </tr>
