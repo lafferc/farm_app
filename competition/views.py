@@ -34,7 +34,9 @@ def submit(request, tour_name):
     if not tournament.participants.filter(pk=request.user.pk).exists():
         return redirect("competition:join", tour_name=tour_name) 
 
-    fixture_list = Match.objects.filter(tournament=tournament, kick_off__gt=timezone.now())
+    fixture_list = Match.objects.filter(tournament=tournament,
+                                        kick_off__gt=timezone.now()
+                                        ).order_by('kick_off')
 
     if request.method == 'POST':
         for match in fixture_list:
@@ -80,7 +82,7 @@ def predictions(request, tour_name):
             if other_user == request.user:
                 other_user = None
             else:
-                predictions = Prediction.objects.filter(user=other_user, match__tournament=tournament, match__kick_off__lt=timezone.now()).order_by('match_id')
+                predictions = Prediction.objects.filter(user=other_user, match__tournament=tournament, match__kick_off__lt=timezone.now()).order_by('-match__kick_off')
                 if other_user.first_name and other_user.last_name:
                     other_user = "%s %s" % (other_user.first_name, other_user.last_name)
                 else:
@@ -93,7 +95,7 @@ def predictions(request, tour_name):
         if not is_participant:
             return redirect("competition:table", tour_name=tour_name)
         user_score = Participant.objects.get(user=request.user, tournament=tournament).score
-        predictions = Prediction.objects.filter(user=request.user, match__tournament=tournament).order_by('match_id')
+        predictions = Prediction.objects.filter(user=request.user, match__tournament=tournament).order_by('-match__kick_off')
 
     current_site = get_current_site(request)
     template = loader.get_template('predictions.html')
