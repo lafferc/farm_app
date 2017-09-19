@@ -101,6 +101,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = '/var/www/static'
 
 LOGGING = {
     'version': 1,
@@ -118,9 +119,9 @@ LOGGING = {
     },
 }
 
-#email settings
+# email settings
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = os.environ['DJANGO_EMAIL_USER']
-EMAIL_HOST_PASSWORD = os.environ['DJANGO_EMAIL_PASS']
+EMAIL_HOST_USER = os.getenv('DJANGO_EMAIL_USER', None)
+EMAIL_HOST_PASSWORD = os.getenv('DJANGO_EMAIL_PASS', None)
